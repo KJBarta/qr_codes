@@ -135,29 +135,33 @@ class QR_Code_Gen :
         # Input characters divided into groups of 2, (45*y)+z, 11-bits; final odd character is 6-bits.
         #----------------------------------------------------------------------#
         def parse_alphanumeric_char_convert(in_char):
+            # print('0',ord('0'))
+            # print('A',ord('A'))
+            # print('%',ord('%'))
+        
             i_char = ord(in_char)
             match i_char:
                 case i_num if ord('0') <= i_num <= ord('9'): # x30 - x39
                     return i_char - ord('0')
                 case i_num if ord('A') <= i_num <= ord('Z'): # x41 - 5A
-                    return i_char - ord('A')
-                case ord(' '): # x20
+                    return 10 + i_char - ord('A')
+                case 0x20: # ord(' '): # x20
                     return 36
-                case ord('#'): # x23
+                case 0x23: # ord('#'): # x23
                     return 37
-                case ord('%'): # x25
+                case 0x25: # ord('%'): # x25
                     return 38
-                case ord('*'): # x2A
+                case 0x2A: # ord('*'): # x2A
                     return 39
-                case ord('+'): # x2B
+                case 0x2B: # ord('+'): # x2B
                     return 40
-                case ord('-'): # x2D
+                case 0x2D: # ord('-'): # x2D
                     return 41
-                case ord('.'): # x2E
+                case 0x2E: # ord('.'): # x2E
                     return 42
-                case ord('/'): # x2F
+                case 0x2F: # ord('/'): # x2F
                     return 43
-                case ord(':'): # x3A
+                case 0x3A: # ord(':'): # x3A
                     return 44
                 case _:
                     raise Exception("Alphanumeric char["+str(in_char)+"] is unexpected.")
@@ -185,6 +189,9 @@ class QR_Code_Gen :
         return (i_data, i_len)
     
     def parse_byte_encoding(self, in_str):
+        # print(bytes(in_str,"utf-8"))
+        # print(int.from_bytes(bytes(in_str,"utf-8"),"big"))
+        print(in_str,' := x',hex(int.from_bytes(bytes(in_str,"utf-8"),"big")))
         return (int.from_bytes(bytes(in_str,"utf-8"),"big"), len(in_str)*8)
     
     #------------------------------#
@@ -207,7 +214,7 @@ class QR_Code_Gen :
         # Numeric Mode, Char Count Bits:  [V1-V9]=10 [V10-V26]=12 [V27-V40]=14
         # (Segment + Terminator) = (Mode + Char Count + Data + Terminator)
         #----------------------------------------------------------------------#
-        for ii in range(1,10):
+        for ii in range(1,10): # 10 bits in char count.
             
             if (self.v_to_num_codewords[ii] - self.v_to_ec_codewords[ii][ec]) >= int( np.ceil((4 + 10 + i_count + 4)/8) ) :
                            
@@ -236,19 +243,120 @@ class QR_Code_Gen :
                     l_alignment     = self.v_to_alignment[ii]         \
                 )
             
-        for ii in range(10,27):
+        for ii in range(10,27): # 12 bits in char count.
             return qr_code.QR_Code()
         
-        for ii in range(27,41):
+        for ii in range(27,41): # 14 bits in char count.
             return qr_code.QR_Code()
         
         raise Exception("Number too large to be represented by QR code V40.")
         
-    def gen_QR_alphanumeric_encoding(self, in_str): # 0-9 A-Z $ % * + - . / : (Space)
-        return qr_code.QR_Code()
+    def gen_QR_alphanumeric_encoding(self, in_str, ec='Q'): # 0-9 A-Z $ % * + - . / : (Space)
     
-    def gen_QR_byte_encoding(self, in_str): # 8-bits per character.
-        return qr_code.QR_Code()
+        #----------------------------------------------------------------------#
+        # TODO: Regular Expression check...
+        #----------------------------------------------------------------------#
+        if False:
+            raise Exception("<>.")
+        
+        #----------------------------------------------------------------------#
+        # Parse Numeric Data
+        #----------------------------------------------------------------------#
+        (i_data, i_count) = self.parse_alphanumeric_encoding(in_str)
+        
+        #----------------------------------------------------------------------#
+        # Numeric Mode, Char Count Bits:  [V1-V9]=10 [V10-V26]=12 [V27-V40]=14
+        # (Segment + Terminator) = (Mode + Char Count + Data + Terminator)
+        #----------------------------------------------------------------------#
+        for ii in range(1,10): # 9 bits in char count.
+            
+            if (self.v_to_num_codewords[ii] - self.v_to_ec_codewords[ii][ec]) >= int( np.ceil((4 + 9 + i_count + 4)/8) ) :
+                           
+                # Construct segment.
+                t_mode = 2
+                t_segment = ((((t_mode<<9) + len(in_str))<<i_count) + i_data)<<4
+                t_len = 4 + 9 + i_count + 4
+                
+                # Pad with 0s if not a multiple of 8.
+                t_segment <<= (8 - (t_len % 8))
+                
+                # Convert to numpy-array.
+                segment_matrix = np.zeros( np.ceil(t_len/8).astype(int), dtype=np.uint8)
+                for jj in range( np.ceil(t_len/8).astype(int)-1, -1, -1):
+                    segment_matrix[jj] = (t_segment >> (jj<<3)) % (1<<8)
+                segment_matrix = np.flip(segment_matrix)
+                                
+                # Return QR Code
+                return qr_code.QR_Code(                                       \
+                    i_qr_ver        = ii,                             \
+                    c_ec            = ec,                             \
+                    m_data          = segment_matrix,                 \
+                    i_num_codewords = self.v_to_num_codewords[ii],    \
+                    i_num_blocks    = self.v_to_blocks[ii][ec],       \
+                    i_ec_per_block  = self.v_to_ec_per_block[ii][ec], \
+                    l_alignment     = self.v_to_alignment[ii]         \
+                )
+            
+        for ii in range(10,27): # 11 bits in char count.
+            return qr_code.QR_Code()
+        
+        for ii in range(27,41): # 13 bits in char count.
+            return qr_code.QR_Code()
+        
+        raise Exception("Alphanumeric too large to be represented by QR code V40.")
+    
+    def gen_QR_byte_encoding(self, in_str, ec='Q'): # 8-bits per character.
+    
+        #----------------------------------------------------------------------#
+        # TODO: Regular Expression check...
+        #----------------------------------------------------------------------#
+        if False:
+            raise Exception("<>.")
+        
+        #----------------------------------------------------------------------#
+        # Parse Numeric Data
+        #----------------------------------------------------------------------#
+        (i_data, i_count) = self.parse_byte_encoding(in_str)
+        # print((i_data, i_count))
+        
+        #----------------------------------------------------------------------#
+        # Numeric Mode, Char Count Bits:  [V1-V9]=10 [V10-V26]=12 [V27-V40]=14
+        # (Segment + Terminator) = (Mode + Char Count + Data + Terminator)
+        #----------------------------------------------------------------------#
+        for ii in range(1,10): # 8 bits in char count.
+            
+            if (self.v_to_num_codewords[ii] - self.v_to_ec_codewords[ii][ec]) >= int( np.ceil((4 + 8 + i_count + 4)/8) ) :
+                           
+                # Construct segment.
+                t_mode = 4
+                t_segment = ((((t_mode<<8) + len(in_str))<<i_count) + i_data)<<4
+                t_len = 4 + 8 + i_count + 4
+                
+                # Pad with 0s if not a multiple of 8.
+                t_segment <<= (8 - t_len)%8
+                
+                # Convert to numpy-array.
+                segment_matrix = np.zeros( np.ceil(t_len/8).astype(int), dtype=np.uint8)
+                for jj in range( np.ceil(t_len/8).astype(int)-1, -1, -1):
+                    segment_matrix[jj] = (t_segment >> (jj<<3)) % (1<<8)
+                segment_matrix = np.flip(segment_matrix)
+                                
+                # Return QR Code
+                return qr_code.QR_Code(                                       \
+                    i_qr_ver        = ii,                             \
+                    c_ec            = ec,                             \
+                    m_data          = segment_matrix,                 \
+                    i_num_codewords = self.v_to_num_codewords[ii],    \
+                    i_num_blocks    = self.v_to_blocks[ii][ec],       \
+                    i_ec_per_block  = self.v_to_ec_per_block[ii][ec], \
+                    l_alignment     = self.v_to_alignment[ii]         \
+                )
+            
+        for ii in range(10,27): # 16 bits in char count.
+            return qr_code.QR_Code()
+        
+        for ii in range(27,41): # 16 bits in char count.
+            return qr_code.QR_Code()
         
     # def gen_QR_kanji_encoding(self, in_str):
         # return qr_code.QR_Code()

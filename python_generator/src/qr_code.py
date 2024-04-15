@@ -468,6 +468,59 @@ class QR_Code :
         i_ver_info = (qr_ver << 12) + i_poly
         
         #----------------------------------------------------------------------#
+        # <>
+        #----------------------------------------------------------------------#
+        ver_poly = [None]*41
+        
+        # ver_poly[ 0] = None
+        # ver_poly[ 1] = None
+        # ver_poly[ 2] = None
+        # ver_poly[ 3] = None
+        # ver_poly[ 4] = None
+        # ver_poly[ 5] = None
+        # ver_poly[ 6] = None
+        ver_poly[ 7] = 0x07C94
+        ver_poly[ 8] = 0x085BC
+        ver_poly[ 9] = 0x09A99
+        
+        ver_poly[10] = 0xA4D3
+        ver_poly[11] = 0x0BBF6
+        ver_poly[12] = 0x0C762
+        ver_poly[13] = 0x0D847
+        ver_poly[14] = 0x0E60D
+        ver_poly[15] = 0x0F928
+        ver_poly[16] = 0x10B78
+        ver_poly[17] = 0x1145D
+        ver_poly[18] = 0x12A17
+        ver_poly[19] = 0x13532
+
+        ver_poly[20] = 0x149A6
+        ver_poly[21] = 0x15683
+        ver_poly[22] = 0x168C9
+        ver_poly[23] = 0x177EC
+        ver_poly[24] = 0x18EC4
+        ver_poly[25] = 0x191E1
+        ver_poly[26] = 0x1AFAB
+        ver_poly[27] = 0x1B08E
+        ver_poly[28] = 0x1CC1A
+        ver_poly[29] = 0x1D33F
+        
+        ver_poly[30] = 0x1ED75
+        ver_poly[31] = 0x1F250
+        ver_poly[32] = 0x209D5
+        ver_poly[33] = 0x216F0
+        ver_poly[34] = 0x228BA
+        ver_poly[35] = 0x2379F
+        ver_poly[36] = 0x24B0B
+        ver_poly[37] = 0x2542E
+        ver_poly[38] = 0x26A64
+        ver_poly[39] = 0x27541
+        
+        ver_poly[40] = 0x28C69
+        
+        i_ver_info = ver_poly[qr_ver]
+        
+        #----------------------------------------------------------------------#
         # Draw Info.
         #----------------------------------------------------------------------#
         for ii in range(3):
