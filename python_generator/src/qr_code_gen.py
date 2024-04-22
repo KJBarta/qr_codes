@@ -78,14 +78,14 @@ class QR_Code_Gen :
     #  Test/Print Functions  #
     #------------------------#
     
-    def print_table_info(self):
+    def get_string_table_info(self):
+        t_str = ""
         for ii in range(1,41):
-            # Print!
-            print(  '[', ii, ']  ', self.v_to_ec_codewords[ii], '  =  ', self.v_to_blocks[ii], '  .*  ', self.v_to_ec_per_block[ii] )
-            # Test!
+            t_str += '['+str(ii)']  '+str(self.v_to_ec_codewords[ii])+'  =  '+str(self.v_to_blocks[ii])+'  .*  '+str(self.v_to_ec_per_block[ii])
             for rs_level in ['L','M','Q','H'] :
                 if  self.v_to_ec_codewords[ii][rs_level] !=  (self.v_to_blocks[ii][rs_level] * self.v_to_ec_per_block[ii][rs_level]) :
-                    print("\t[",str(ii),"][",rs_level,"]  ::  ",self.v_to_ec_codewords[ii][rs_level],"  !=  ",self.v_to_blocks[ii][rs_level],"  *  ",self.v_to_ec_per_block[ii][rs_level])
+                    t_str += "\t["+str(ii)+"]["+rs_level+"]  ::  "str(self.v_to_ec_codewords[ii][rs_level])+"  !=  "+str(self.v_to_blocks[ii][rs_level])+"  *  "+str(self.v_to_ec_per_block[ii][rs_level])
+        return t_str
     
     #--------------#
     #  Parse Data  #
@@ -135,10 +135,6 @@ class QR_Code_Gen :
         # Input characters divided into groups of 2, (45*y)+z, 11-bits; final odd character is 6-bits.
         #----------------------------------------------------------------------#
         def parse_alphanumeric_char_convert(in_char):
-            # print('0',ord('0'))
-            # print('A',ord('A'))
-            # print('%',ord('%'))
-        
             i_char = ord(in_char)
             match i_char:
                 case i_num if ord('0') <= i_num <= ord('9'): # x30 - x39
@@ -189,9 +185,6 @@ class QR_Code_Gen :
         return (i_data, i_len)
     
     def parse_byte_encoding(self, in_str):
-        # print(bytes(in_str,"utf-8"))
-        # print(int.from_bytes(bytes(in_str,"utf-8"),"big"))
-        print(in_str,' := x',hex(int.from_bytes(bytes(in_str,"utf-8"),"big")))
         return (int.from_bytes(bytes(in_str,"utf-8"),"big"), len(in_str)*8)
     
     #------------------------------#
@@ -317,7 +310,6 @@ class QR_Code_Gen :
         # Parse Numeric Data
         #----------------------------------------------------------------------#
         (i_data, i_count) = self.parse_byte_encoding(in_str)
-        # print((i_data, i_count))
         
         #----------------------------------------------------------------------#
         # Numeric Mode, Char Count Bits:  [V1-V9]=10 [V10-V26]=12 [V27-V40]=14
