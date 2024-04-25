@@ -42,6 +42,8 @@ import qr_code
 #   - Mixing (Within one QR Code.)
 #   - Structured Append (Between multiple QR Codes.)
 #------------------------------------------------------------------------------#
+
+#------------------------------------------------------------------------------#
 # FNC1 Mode:
 #   - Messages containing specific data formats.
 #------------------------------------------------------------------------------#
@@ -81,11 +83,20 @@ class QR_Code_Gen :
     def get_string_table_info(self):
         t_str = ""
         for ii in range(1,41):
-            t_str += '['+str(ii)']  '+str(self.v_to_ec_codewords[ii])+'  =  '+str(self.v_to_blocks[ii])+'  .*  '+str(self.v_to_ec_per_block[ii])
+            t_str += '['+str(ii)+']  '+str(self.v_to_ec_codewords[ii])+'  =  '+str(self.v_to_blocks[ii])+'  .*  '+str(self.v_to_ec_per_block[ii])
             for rs_level in ['L','M','Q','H'] :
                 if  self.v_to_ec_codewords[ii][rs_level] !=  (self.v_to_blocks[ii][rs_level] * self.v_to_ec_per_block[ii][rs_level]) :
-                    t_str += "\t["+str(ii)+"]["+rs_level+"]  ::  "str(self.v_to_ec_codewords[ii][rs_level])+"  !=  "+str(self.v_to_blocks[ii][rs_level])+"  *  "+str(self.v_to_ec_per_block[ii][rs_level])
+                    t_str += "\t["+str(ii)+"]["+rs_level+"]  ::  "+str(self.v_to_ec_codewords[ii][rs_level])+"  !=  "+str(self.v_to_blocks[ii][rs_level])+"  *  "+str(self.v_to_ec_per_block[ii][rs_level])
         return t_str
+    
+    def get_string_help(self):
+        #------------------------------------------------------------------------------#
+        # Data Capacity @ v40 L:
+        #   - Numeric: 7089
+        #   - Alpha:   4296
+        #   - Byte:    2953
+        #------------------------------------------------------------------------------#
+        return ""
     
     #--------------#
     #  Parse Data  #
@@ -207,14 +218,23 @@ class QR_Code_Gen :
         # Numeric Mode, Char Count Bits:  [V1-V9]=10 [V10-V26]=12 [V27-V40]=14
         # (Segment + Terminator) = (Mode + Char Count + Data + Terminator)
         #----------------------------------------------------------------------#
-        for ii in range(1,10): # 10 bits in char count.
+        for ii in range(1,41):
             
-            if (self.v_to_num_codewords[ii] - self.v_to_ec_codewords[ii][ec]) >= int( np.ceil((4 + 10 + i_count + 4)/8) ) :
+            #------------------------------------------------------------------#
+            if ii <= 10 :
+                i_bits = 10
+            elif ii <= 27 :
+                i_bits = 12
+            else :
+                i_bits = 14
+            
+            #------------------------------------------------------------------#
+            if (self.v_to_num_codewords[ii] - self.v_to_ec_codewords[ii][ec]) >= int( np.ceil((4 + i_bits + i_count + 4)/8) ) :
                            
                 # Construct segment.
                 t_mode = 1
-                t_segment = ((((t_mode<<10) + len(in_str))<<i_count) + i_data)<<4
-                t_len = 4 + 10 + i_count + 4
+                t_segment = ((((t_mode<<i_bits) + len(in_str))<<i_count) + i_data)<<4
+                t_len = 4 + i_bits + i_count + 4
                 
                 # Pad with 0s if not a multiple of 8.
                 t_segment <<= (8 - (t_len % 8))
@@ -235,12 +255,6 @@ class QR_Code_Gen :
                     i_ec_per_block  = self.v_to_ec_per_block[ii][ec], \
                     l_alignment     = self.v_to_alignment[ii]         \
                 )
-            
-        for ii in range(10,27): # 12 bits in char count.
-            return qr_code.QR_Code()
-        
-        for ii in range(27,41): # 14 bits in char count.
-            return qr_code.QR_Code()
         
         raise Exception("Number too large to be represented by QR code V40.")
         
@@ -261,14 +275,23 @@ class QR_Code_Gen :
         # Numeric Mode, Char Count Bits:  [V1-V9]=10 [V10-V26]=12 [V27-V40]=14
         # (Segment + Terminator) = (Mode + Char Count + Data + Terminator)
         #----------------------------------------------------------------------#
-        for ii in range(1,10): # 9 bits in char count.
+        for ii in range(1,41): # 9 bits in char count.
             
-            if (self.v_to_num_codewords[ii] - self.v_to_ec_codewords[ii][ec]) >= int( np.ceil((4 + 9 + i_count + 4)/8) ) :
+            #------------------------------------------------------------------#
+            if ii <= 10 :
+                i_bits = 9
+            elif ii <= 27 :
+                i_bits = 11
+            else :
+                i_bits = 13
+            
+            #------------------------------------------------------------------#
+            if (self.v_to_num_codewords[ii] - self.v_to_ec_codewords[ii][ec]) >= int( np.ceil((4 + i_bits + i_count + 4)/8) ) :
                            
                 # Construct segment.
                 t_mode = 2
-                t_segment = ((((t_mode<<9) + len(in_str))<<i_count) + i_data)<<4
-                t_len = 4 + 9 + i_count + 4
+                t_segment = ((((t_mode<<i_bits) + len(in_str))<<i_count) + i_data)<<4
+                t_len = 4 + i_bits + i_count + 4
                 
                 # Pad with 0s if not a multiple of 8.
                 t_segment <<= (8 - (t_len % 8))
@@ -289,12 +312,6 @@ class QR_Code_Gen :
                     i_ec_per_block  = self.v_to_ec_per_block[ii][ec], \
                     l_alignment     = self.v_to_alignment[ii]         \
                 )
-            
-        for ii in range(10,27): # 11 bits in char count.
-            return qr_code.QR_Code()
-        
-        for ii in range(27,41): # 13 bits in char count.
-            return qr_code.QR_Code()
         
         raise Exception("Alphanumeric too large to be represented by QR code V40.")
     
@@ -315,14 +332,23 @@ class QR_Code_Gen :
         # Numeric Mode, Char Count Bits:  [V1-V9]=10 [V10-V26]=12 [V27-V40]=14
         # (Segment + Terminator) = (Mode + Char Count + Data + Terminator)
         #----------------------------------------------------------------------#
-        for ii in range(1,10): # 8 bits in char count.
+        for ii in range(1,41): # 8 bits in char count.
+        
+            #------------------------------------------------------------------#
+            if ii <= 10 :
+                i_bits = 8
+            elif ii <= 27 :
+                i_bits = 16
+            else :
+                i_bits = 16
             
-            if (self.v_to_num_codewords[ii] - self.v_to_ec_codewords[ii][ec]) >= int( np.ceil((4 + 8 + i_count + 4)/8) ) :
+            #------------------------------------------------------------------#
+            if (self.v_to_num_codewords[ii] - self.v_to_ec_codewords[ii][ec]) >= int( np.ceil((4 + i_bits + i_count + 4)/8) ) :
                            
                 # Construct segment.
                 t_mode = 4
-                t_segment = ((((t_mode<<8) + len(in_str))<<i_count) + i_data)<<4
-                t_len = 4 + 8 + i_count + 4
+                t_segment = ((((t_mode<<i_bits) + len(in_str))<<i_count) + i_data)<<4
+                t_len = 4 + i_bits + i_count + 4
                 
                 # Pad with 0s if not a multiple of 8.
                 t_segment <<= (8 - t_len)%8
@@ -343,12 +369,8 @@ class QR_Code_Gen :
                     i_ec_per_block  = self.v_to_ec_per_block[ii][ec], \
                     l_alignment     = self.v_to_alignment[ii]         \
                 )
-            
-        for ii in range(10,27): # 16 bits in char count.
-            return qr_code.QR_Code()
         
-        for ii in range(27,41): # 16 bits in char count.
-            return qr_code.QR_Code()
+        raise Exception("Byte too large to be represented by QR code V40.")
         
     # def gen_QR_kanji_encoding(self, in_str):
         # return qr_code.QR_Code()
@@ -395,22 +417,22 @@ class QR_Code_Gen :
     #--------------------------#
     #  Catch-all QR Generator  #
     #--------------------------#
-    def gen_QR(self, in_str):
+    # def gen_QR(self, in_str):
     
-        # Error if not string.
-        if not isinstance(in_str, str):
-            raise Exception("Expecting input type 'str'.")
+        # # Error if not string.
+        # if not isinstance(in_str, str):
+            # raise Exception("Expecting input type 'str'.")
         
-        # Decode data:
-        data = None
+        # # Decode data:
+        # data = None
         
-        # Determine how big QR needed based on data.
-        necessary_codewords = None
-        ver = 1
-        while( necessary_codewords > self.v_to_num_codewords[ii] ):
-            ver += 1
-            if ver > 40 :
-                raise Exception("Byte data exceeds QR Code v40 size.")
+        # # Determine how big QR needed based on data.
+        # necessary_codewords = None
+        # ver = 1
+        # while( necessary_codewords > self.v_to_num_codewords[ii] ):
+            # ver += 1
+            # if ver > 40 :
+                # raise Exception("Byte data exceeds QR Code v40 size.")
         
-        # Generate QR Code class.
-        return qr_code.QR_Code(ver, data)
+        # # Generate QR Code class.
+        # return qr_code.QR_Code(ver, data)

@@ -29,21 +29,21 @@ if __name__ == '__main__' :
                     l_alignment     = qr_gen_test.v_to_alignment[9]          \
     )
     
-    #-------#
-    #  PIL  #
-    #-------#
+    # #-------#
+    # #  PIL  #
+    # #-------#
     
-    # Add whitespace
-    m_thick = np.zeros((qr_code_hw.side_length+8, qr_code_hw.side_length+8), dtype=bool)
-    m_thick[4:-4,4:-4] = qr_code_hw.cell_list_masked[qr_code_hw.best_qr]
+    # # Add whitespace
+    # m_thick = np.zeros((qr_code_hw.side_length+8, qr_code_hw.side_length+8), dtype=bool)
+    # m_thick[4:-4,4:-4] = qr_code_hw.cell_list_masked[qr_code_hw.best_qr]
     
-    # More pixels for clarity...
-    m_thick = np.repeat(m_thick, 5, axis=0)
-    m_thick = np.repeat(m_thick, 5, axis=1)
+    # # More pixels for clarity...
+    # m_thick = np.repeat(m_thick, 5, axis=0)
+    # m_thick = np.repeat(m_thick, 5, axis=1)
     
-    # Display
-    qr_image = img.fromarray(np.invert(m_thick))
-    qr_image.show()
+    # # Display
+    # qr_image = img.fromarray(np.invert(m_thick))
+    # qr_image.show()
     
     #----------#
     #  PIL v9  #

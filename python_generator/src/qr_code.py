@@ -49,6 +49,8 @@ class QR_Code :
         self.fill_version_info(i_qr_ver)
         self.fill_format_into(0) # Pre-emptive claim of format info == '0' ...
         
+        # print(self.get_string_info())
+        
         # Data + Final Mask
         self.fill_data(m_data)
         
@@ -57,7 +59,6 @@ class QR_Code :
         for ii in range(8):
             self.cell_list_masked[ii] = self.select_mask_fill_format(ii) # Overwrites the '0' format info.
             self.cell_list_score[ii] = self.qr_code_penalty(self.cell_list_masked[ii])
-            
         
         self.best_qr = 0
         min_score    = sum(self.cell_list_score[0])
@@ -80,17 +81,20 @@ class QR_Code :
         t_str += "\n# Blocks in QR           : "+str(self.blocks)
         t_str += "\n# EC Codewords per Block : "+str(self.ec_per_block)
         t_str += "\n# Alignment List         : "+str(self.alignment_list)
+        t_str += "\n# Data Matrix            : "+str(self.data_matrix)+" : Size = "+str(self.data_matrix.shape)
         
         if self.m_final_data is not None :
-            t_str += "\n\nData Matrix:"+str(self.m_final_data)
+            t_str += "\n\nData Matrix:\n"+str(self.m_final_data)
             
         if self.m_final_ec is not None :
-            t_str += "\n\nEC Matrix:"+str(self.m_final_ec)
-            
+            t_str += "\n\nEC Matrix:\n"+str(self.m_final_ec)
+        
         if self.m_final_qr is not None :
-            t_str += "\n\nFinal Matrix:"
+            m_str_final = [""]*self.m_final_qr.size
             for ii in range(self.m_final_qr.size) :
-                t_str += "\n\t" + hex(self.m_final_qr[ii])
+                m_str_final[ii] = hex(self.m_final_qr[ii])
+            t_str += "\n\nFinal Matrix:\n"+str(self.m_final_qr)
+            t_str += "\n\nFinal Matrix:\n"+str(m_str_final)
             
         return t_str
         
@@ -261,7 +265,7 @@ class QR_Code :
         i_remaining  = int(m_data_codewords.size-(i_block_min*self.blocks)) # How many of the 'blocks' will have '1-extra byte'.
         i_zero_pad   = (0-i_remaining)%self.blocks
         
-        if i_zero_pad is not 0:
+        if i_zero_pad != 0:
         
             m_blocked_data = np.empty((self.blocks, i_block_max), dtype=np.uint8)
             
@@ -341,7 +345,7 @@ class QR_Code :
         i_byte = 0
         
         def next_bool():
-            if(i_byte > m_final.size):
+            if(i_byte >= m_final.size):
                 return False
             return ((m_final[i_byte] & i_bit) != 0)
         
